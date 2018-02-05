@@ -35,17 +35,6 @@ colnames(dat) <- make.names(colnames(dat), unique=TRUE)
 
 
 
-
-####### Queestion 1 - There are multiple entries for the same client number. Those client numbers are 
-#######                111157844,111157920,111160126,111156150,111156354,111156731. 
-#######                Why is that? We are assuming that there should be one record for each customer, is that right?
-View (dat %>% 
-        filter(Client.Number== 4547) %>% 
-        select(Form.Date,Program,Staff,Disabilities.or.Barriers.to.Treatment,disability_flag))
-
-
-
-
 ######## check the class of the data attributes - almost all of them are factors, 
 ######## we need to convert them to right format before we start our EDA
 #table(sapply(dat,class))
@@ -89,6 +78,12 @@ dat <- dat[,-2]
 
 
 
+####### Question 1 - There are multiple entries for the same client number. Some of those client numbers are 
+#######                111157844,111157920,111160126,111156150,111156354,111156731. 
+#######                Why is that? We are assuming that there should be one record for each customer, is that right?
+View (dat %>% 
+        filter(Client.Number== 111156354) %>% 
+        select(Form.Date,Program,Staff,Disabilities.or.Barriers.to.Treatment,disability_flag))
 ##### Lets check the summary of the data again now
 summary(dat)
 
@@ -105,7 +100,7 @@ ggplot(data=df_program, aes(reorder(x=Program,percent_total),y = percent_total))
   guides(fill=FALSE) +
   xlab("Program Name") + ylab("Count") +
   ggtitle("Avivo CT Programs Overview") + theme_tufte() + coord_flip() +
-  geom_text(aes(label=percent_total),hjust =-0.25,color='black')
+  geom_text(aes(label=percent_total),hjust =-0.1,color='black',size = 2.5)
 #  Top 5 programs constitute almost 80% of the program.
 
 
@@ -122,22 +117,24 @@ ggplot(data=df_discharges, aes(reorder(x=Reason.for.Discharge,percent_total),y =
   guides(fill=FALSE) +
   xlab("Discharge Reason") + ylab("Count") +
   ggtitle("Reason for Discharges") + theme_tufte() + coord_flip() +
-  geom_text(aes(label=percent_total),hjust =-0.25,color='black')
+  geom_text(aes(label=percent_total),hjust =-1,color='black',size =2.5)
 # 30.8% of the patients left without staff approval, patient conduct is also a big factor, almost 20%.Wonder what that means!
-
-
-
 
 
 #### Let's create a flag for patients who completed the program and another flag for patients who 
 ####  left without staff approval and compare two populations
 dat$Completed.Program <- 0
-dat$Completed.Program <-  as.factor(ifelse(dat$Reason.for.Discharge %in% c("Completed program"), 1, 0))
+dat$Completed.Program <-  ifelse(dat$Reason.for.Discharge %in% c("Completed program"), 1, 0)
+
+dat$Left.Program <- 0
+dat$Left.Program <-  ifelse(trimws(dat$Reason.for.Discharge) %in% c("Patient left without staff approval","Incarcerated"), 1, 0)
 
 
 
 
-### Lets review the distribution of these two populations by the different numeric variables we have
+################### For first part lets focus on the population which completed the program #############################################
+
+### Lets review the distribution of the population who completed the program by the different numeric variables we have
 par(mfrow=c(3,2), mar=c(2,2,2,2))
 plot(aggregate(Completed.Program~Days.used.in.past.30..Primary.,data=dat, mean), type="b", main="Completion by usage")
 plot(aggregate(Completed.Program~Hours.of.treatment,data=dat, mean), type="b", main="Hours.of.treatment")
@@ -154,16 +151,19 @@ par(mfrow=c(1,1))
 
 ##### Lets do some comparison of the categorical variables by completion rate
 ## Does having children show any effect on program completion?
+
+dat$Completed.Program <- as.factor(dat$Completed.Program)
+
 df_completion_children <- dat %>%
   group_by(Does.client.have.children,Completed.Program) %>%
   summarize(counts = n()) %>% 
   mutate(percent_total = round(counts / sum(counts) * 100,2))
 
 ggplot(data=df_completion_children, aes(x=Does.client.have.children,y = percent_total,fill=Completed.Program))+ 
-  geom_bar(colour="black", width=.8, stat="identity") + 
+  geom_bar(colour="black", width=.8, stat="identity",position = 'dodge') + 
+  geom_text(aes(label=percent_total),color='black',position = position_dodge(width = 1), vjust = -0.5, size = 3) +
   xlab("Client has Children") + ylab("Count") +
   ggtitle("Completion rate by Children") + theme_tufte() + 
-  geom_text(aes(label=percent_total),color='black',vjust = 1.5) +
   scale_fill_manual(values=c("#999999", "#E69F00"))
 
 # there is not much significant difference we can see between them
@@ -177,13 +177,13 @@ ggplot(data=df_completion_children, aes(x=Does.client.have.children,y = percent_
 df_completion_laborforce <- dat %>%
   group_by(Current.labor.force.status,Completed.Program) %>%
   summarize(counts = n()) %>% 
-  mutate(percent_total = round(counts / sum(counts) * 100,2))
+  mutate(percent_total = round(counts / sum(counts) * 100,1))
 
 ggplot(data=df_completion_laborforce, aes(x=Current.labor.force.status,y = percent_total,fill=Completed.Program))+ 
-  geom_bar(colour="black", width=.8, stat="identity") + 
+  geom_bar(colour="black", width=.8, stat="identity",position = 'dodge') + 
+  geom_text(aes(label=percent_total),color='black',position = position_dodge(width = 1), vjust = -0.5, size = 3) +
   xlab("Labor Force Status") + ylab("Count") +
   ggtitle("Completion Rate by labor force status") + theme_tufte() + 
-  geom_text(aes(label=percent_total),color='black',vjust = 1.5) +
   scale_fill_manual(values=c("#999999", "#E69F00")) + coord_flip()
 
 dat$employment_flag <- 1
