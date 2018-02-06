@@ -1,7 +1,19 @@
 ---
-title: "Admissions_EDA"
-output: html_document
+title: "Exploratory Data Analysis - Admissions Data"
+author: "Abhishek Roy"
+output:
+  html_document:
+    fig_caption: true
+    keep_md:  true
+    theme:  flatly
 ---
+
+## Introduction  
+
+Exploratory Data Analysis(EDA) of the Avivo Admissions data.We also have the discharge data that needs to be
+integrated with the Admissions data but for this walkthrough we would focus on the Admissions file
+
+<br>
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -23,7 +35,7 @@ setwd("~/teamavivo")
 # lets get the admission data in first 
 
 dat <- as_data_frame(fread("Daanes admissions 1.1.14-12.31.17.csv",header = TRUE,
-                           na.strings=c("NA","NaN","","N/A","unknown","unknwn","None","-","Na"," "),sep =",",
+                           na.strings=c("NA","NaN","","N/A","unknown","unknwn","None","-","Na"," ","99"),sep =",",
                            skip = 0,stringsAsFactors = TRUE,check.names = T))
 
 
@@ -91,7 +103,7 @@ dat <- dat[,-2]
 
 #### Lets start by looking at the different programs offered by Avivo and their split
 
-```{r Programs Overview Avivo}
+```{r Programs Overview Avivo,fig.width = 7, fig.height = 4.5}
 #### Lets start by looking at the different programs offered by Avivo and their split
 df_program <- dat %>%
   group_by(Program) %>%
@@ -101,13 +113,13 @@ df_program <- dat %>%
 ggplot(data=df_program, aes(reorder(x=Program,percent_total),y = percent_total))+ 
   geom_bar(colour="black", width=.8, stat="identity") + 
   guides(fill=FALSE) +
-  xlab("Program Name") + ylab("Count") +
+  xlab("Program Name") + ylab("Percent Total") +
   ggtitle("Avivo CT Programs Overview") + theme_tufte() + coord_flip() +
   geom_text(aes(label=percent_total),hjust =-.25,color='black',size=2.5)
 #  Top 5 programs constitute almost 80% of the program.
 ```
 
-```{r Reasons for Discharge}
+```{r Reasons for Discharge,fig.width = 7, fig.height = 4.5}
 
 ##### Lets now start looking at why patients leave the program, we have a variable called Reasons for Discharge
 df_discharges <- dat %>%
@@ -118,7 +130,7 @@ df_discharges <- dat %>%
 ggplot(data=df_discharges, aes(reorder(x=Reason.for.Discharge,percent_total),y = percent_total))+ 
   geom_bar(colour="black", width=.8, stat="identity") + 
   guides(fill=FALSE) +
-  xlab("Discharge Reason") + ylab("Count") +
+  xlab("Discharge Reason") + ylab("Percent Total") +
   ggtitle("Reason for Discharges") + theme_tufte() + coord_flip() +
   geom_text(aes(label=percent_total),hjust =-0.25,color='black',size=2.5)
 # 30.8% of the patients left without staff approval, patient conduct is also a big factor, almost 20%.Wonder what that means!
@@ -137,7 +149,7 @@ dat$Left.Program <-  ifelse(trimws(dat$Reason.for.Discharge) %in% c("Patient lef
 ################### For first part lets focus on the population which completed the program ##########################
 
 
-```{r completed program relation with some numeric variables}
+```{r completed program relation with some numeric variables,fig.width = 7, fig.height = 4.5}
 ### Lets review the distribution of the population who completed the program by the different numeric variables we have
 par(mfrow=c(3,2))
 plot(aggregate(Completed.Program~Days.used.in.past.30..Primary.,data=dat, mean), type="b", main="Completion by usage")
@@ -151,7 +163,7 @@ par(mfrow=c(1,1))
 
 ## Does having children show any effect on program completion?
 
-```{r completed program relation with children}
+```{r completed program relation with children,fig.width = 7, fig.height = 4.5}
 ##### Lets do some comparison of the categorical variables by completion rate
 
 dat$Completed.Program <- as.factor(dat$Completed.Program)
@@ -164,7 +176,7 @@ df_completion_children <- dat %>%
 ggplot(data=df_completion_children, aes(x=Does.client.have.children,y = percent_total,fill=Completed.Program))+ 
   geom_bar(colour="black", width=.8, stat="identity",position = 'dodge') + 
   geom_text(aes(label=percent_total),color='black',position = position_dodge(width = 1), vjust = -0.5, size = 3) +
-  xlab("Client has Children") + ylab("Count") +
+  xlab("Client has Children") + ylab("Percent Total") +
   ggtitle("Completion rate by Children") + theme_tufte() + 
   scale_fill_manual(values=c("#999999", "#E69F00"))
 
@@ -174,7 +186,7 @@ ggplot(data=df_completion_children, aes(x=Does.client.have.children,y = percent_
 
 ## Does labor force status have any effect on program completion?
 
-```{r completed program relation with laborforce status}
+```{r completed program relation with laborforce status,fig.width = 7, fig.height = 6.5}
 df_completion_laborforce <- dat %>%
   group_by(Current.labor.force.status,Completed.Program) %>%
   summarize(counts = n()) %>% 
@@ -183,7 +195,7 @@ df_completion_laborforce <- dat %>%
 ggplot(data=df_completion_laborforce, aes(x=Current.labor.force.status,y = percent_total,fill=Completed.Program)) + 
   geom_bar(colour="black", width=.8, stat="identity",position = 'dodge') + 
   geom_text(aes(label=percent_total),color='black',position = position_dodge(width = 1), vjust = -0.5, size = 3) +
-  xlab("Labor Force Status") + ylab("Count") +
+  xlab("Labor Force Status") + ylab("Percent Total") +
   ggtitle("Completion Rate by labor force status") + theme_tufte() + 
   scale_fill_manual(values=c("#999999", "#E69F00")) + coord_flip()
 
@@ -201,7 +213,7 @@ chisq.test(table(dat$Completed.Program,dat$employment_flag)) # very high correla
 
 
 ## Does the abuse history have any correlation with program completion?
-```{r completed program relation with abuse history}
+```{r completed program relation with abuse history,fig.width = 7, fig.height = 4.5}
 df_completion_abuse <- dat %>%
   group_by(Perpetrator.of.Abuse,Completed.Program) %>%
   summarize(counts = n()) %>% 
@@ -230,7 +242,7 @@ chisq.test(table(dat$Completed.Program,dat$abuse_history_flag))
 ```
 
 
-###### Does the living have any relation with completion rate
+###### Does disability have any relation with completion rate
 ```{r completed program relation with disability}
 dat$disability_flag <- 1
 dat$disability_flag <-ifelse(trimws(dat$Disabilities.or.Barriers.to.Treatment) == "<NA>",0,1)
@@ -241,7 +253,7 @@ chisq.test(table(dat$Completed.Program,dat$disability_flag))
 ```
 
 ##### Does living conditions have relation with completion rate
-```{r completed program relation with living conditions}
+```{r completed program relation with living conditions,fig.width = 7, fig.height = 4.5}
 df_completion_living <- dat %>%
   group_by(Where.client.has.been.living.in.past.30.days,Completed.Program) %>%
   summarize(counts = n()) %>% 
@@ -261,7 +273,7 @@ ggplot(data=df_completion_living, aes(x=Where.client.has.been.living.in.past.30.
 ```
 
 ## Does the abuse history(victim) have any correlation with program completion?
-```{r completed program relation with victim abuse history}
+```{r completed program relation with victim abuse history,fig.width = 7, fig.height = 4.5}
 df_completion_abuse_victim <- dat %>%
   group_by(Victim.of.abuse,Completed.Program) %>%
   summarize(counts = n()) %>% 
@@ -289,5 +301,35 @@ prop.table(table(dat$Completed.Program,dat$abuse_victim_flag),1)
 
 chisq.test(table(dat$Completed.Program,dat$abuse_victim_flag))
 # it seems like there is a very high correlation between victim abuse history and program completion rate
+
+```
+
+
+## Does child protection involvement have any correlation with program completion?
+```{r completed program relation with CPS involvement,fig.width = 7, fig.height = 4.5}
+df_completion_cps <- dat %>%
+  group_by(Currently.involved.with.CPS,Completed.Program) %>%
+  summarize(counts = n()) %>% 
+  mutate(percent_total = round(counts / sum(counts) * 100,2)) %>% 
+  select(Currently.involved.with.CPS,Completed.Program,percent_total)
+
+
+ggplot(data=df_completion_cps, aes(x=Currently.involved.with.CPS,y = percent_total,fill=Completed.Program))+ 
+  geom_bar(colour="black", width=.8, stat="identity",position = 'dodge') + 
+  geom_text(aes(label=percent_total),color='black',position = position_dodge(width = 1), vjust = -0.5, size = 3) +
+  xlab("Involved with CPS") + ylab("Percent Total") +
+  ggtitle("Completion Rate by cps involvement") + 
+  theme_tufte() + 
+  scale_fill_manual(values=c("#999999", "#E69F00")) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r chi square test with CPS history}
+dat$cps_history_flag <- 0
+dat$cps_history_flag <-  as.factor(ifelse(trimws(dat$Currently.involved.with.CPS) %in% c("Yes"), 1, 0))
+
+prop.table(table(dat$Completed.Program,dat$cps_history_flag),1)
+
+chisq.test(table(dat$Completed.Program,dat$cps_history_flag))
+# it seems like there is no orrelation between CPS and program completion rate
 
 ```
