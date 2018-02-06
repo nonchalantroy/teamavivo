@@ -230,7 +230,7 @@ chisq.test(table(dat$Completed.Program,dat$abuse_history_flag))
 ```
 
 
-###### Does the disability have any relation with completion rate
+###### Does the living have any relation with completion rate
 ```{r completed program relation with disability}
 dat$disability_flag <- 1
 dat$disability_flag <-ifelse(trimws(dat$Disabilities.or.Barriers.to.Treatment) == "<NA>",0,1)
@@ -238,4 +238,56 @@ dat$disability_flag[is.na(dat$disability_flag)] <- 0
 dat$disability_flag <- as.factor(dat$disability_flag)
 chisq.test(table(dat$Completed.Program,dat$disability_flag))
 # The chisquare test tells us there is no relationship here.
+```
+
+##### Does living conditions have relation with completion rate
+```{r completed program relation with living conditions}
+df_completion_living <- dat %>%
+  group_by(Where.client.has.been.living.in.past.30.days,Completed.Program) %>%
+  summarize(counts = n()) %>% 
+  mutate(percent_total = round(counts / sum(counts) * 100,0)) %>% 
+  select(Where.client.has.been.living.in.past.30.days,Completed.Program,percent_total)
+
+
+ggplot(data=df_completion_living, aes(x=Where.client.has.been.living.in.past.30.days,y = percent_total,fill=Completed.Program)) + 
+  geom_bar(colour="black", width=.8, stat="identity",position = 'dodge') + 
+  geom_text(aes(label=percent_total),color='black',position = position_dodge(width = 1), vjust = -0.5, size = 3) +
+  xlab("Client Living Conditions") + ylab("Percent Total") +
+  ggtitle("Completion Rate by living condition") + 
+  theme_tufte() + 
+  scale_fill_manual(values=c("#999999", "#E69F00")) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+# there is no significant relationship here
+```
+
+## Does the abuse history(victim) have any correlation with program completion?
+```{r completed program relation with victim abuse history}
+df_completion_abuse_victim <- dat %>%
+  group_by(Victim.of.abuse,Completed.Program) %>%
+  summarize(counts = n()) %>% 
+  mutate(percent_total = round(counts / sum(counts) * 100,0)) %>% 
+  select(Victim.of.abuse,Completed.Program,percent_total)
+
+
+ggplot(data=df_completion_abuse_victim, aes(x=Victim.of.abuse,y = percent_total,fill=Completed.Program))+ 
+  geom_bar(colour="black", width=.8, stat="identity",position = 'dodge') + 
+  geom_text(aes(label=percent_total),color='black',position = position_dodge(width = 1), vjust = -0.5, size = 3) +
+  xlab("Victim of Abuse") + ylab("Percent Total") +
+  ggtitle("Completion Rate by abuse victim indicator") + 
+  theme_tufte() + 
+  scale_fill_manual(values=c("#999999", "#E69F00")) 
+```
+
+```{r chi square test with victim abuse history}
+dat$abuse_victim_flag <- 0
+dat$abuse_victim_flag <-  ifelse(trimws(dat$Victim.of.abuse) %in%
+                                         c("Yes, physical and sexual",
+                                           "Yes, physical only",
+                                           "Yes, sexual only"), 1, 0)
+
+prop.table(table(dat$Completed.Program,dat$abuse_victim_flag),1)
+
+chisq.test(table(dat$Completed.Program,dat$abuse_victim_flag))
+# it seems like there is a very high correlation between victim abuse history and program completion rate
+
 ```
