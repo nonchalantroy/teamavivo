@@ -141,8 +141,7 @@ setwd(&quot;~/teamavivo&quot;)</code></pre>
 <pre class="r"><code># lets get the admission data in first 
 
 dat &lt;- as_data_frame(fread(&quot;Daanes admissions 1.1.14-12.31.17.csv&quot;,header = TRUE,
-                           na.strings=c(&quot;NA&quot;,&quot;NaN&quot;,&quot;&quot;,&quot;N/A&quot;,&quot;unknown&quot;,&quot;unknwn&quot;,&quot;None&quot;,&quot;-&quot;,&quot;Na&quot;,&quot; &quot;,&quot;99&quot;),sep =&quot;,&quot;,
-                           skip = 0,stringsAsFactors = TRUE,check.names = T))
+                          na.strings=c(&quot;NA&quot;,&quot;NaN&quot;,&quot;&quot;,&quot;N/A&quot;,&quot;unknown&quot;,&quot;unknwn&quot;,&quot;None&quot;,&quot;-&quot;,&quot;Na&quot;,&quot;&quot;,&quot;99&quot;),sep =&quot;,&quot;,skip = 0,stringsAsFactors = TRUE,check.names = T))
 
 
 
@@ -150,14 +149,14 @@ dat &lt;- as_data_frame(fread(&quot;Daanes admissions 1.1.14-12.31.17.csv&quot;,
 dim(dat)</code></pre>
 <pre><code>## [1] 1789   64</code></pre>
 <pre class="r"><code>summary(dat)</code></pre>
-<pre><code>##     Form Date    Form Ineffective Date
-##  10/28/16:  10   Mode:logical         
-##  12/15/17:  10   NA's:1789            
-##  9/16/16 :  10                        
-##  10/13/17:   9                        
-##  11/6/15 :   9                        
-##  12/18/15:   9                        
-##  (Other) :1732                        
+<pre><code>##       Form Date    Form Ineffective Date
+##  10/28/2016:  10   Mode:logical         
+##  12/15/2017:  10   NA's:1789            
+##  9/16/2016 :  10                        
+##  10/13/2017:   9                        
+##  11/6/2015 :   9                        
+##  12/18/2015:   9                        
+##  (Other)   :1732                        
 ##                             Program                     Staff    
 ##  Treatment - IDD Men            :565   Jackson, Jacinta    :231  
 ##  Treatment - IDD Women          :502   Roche, Maria        :194  
@@ -592,7 +591,7 @@ dim(dat)</code></pre>
 ## </code></pre>
 <pre class="r"><code>str(dat)</code></pre>
 <pre><code>## Classes 'tbl_df', 'tbl' and 'data.frame':    1789 obs. of  64 variables:
-##  $ Form Date                                                            : Factor w/ 666 levels &quot;1/1/15&quot;,&quot;1/10/16&quot;,..: 615 646 651 46 46 74 87 94 138 158 ...
+##  $ Form Date                                                            : Factor w/ 666 levels &quot;1/1/2015&quot;,&quot;1/10/2016&quot;,..: 615 646 651 46 46 74 87 94 138 158 ...
 ##  $ Form Ineffective Date                                                : logi  NA NA NA NA NA NA ...
 ##  $ Program                                                              : Factor w/ 19 levels &quot;ARMHS - Princeton/St. Cloud&quot;,..: 14 14 15 15 15 13 15 15 14 15 ...
 ##  $ Staff                                                                : Factor w/ 43 levels &quot;Ackerman, Christopher&quot;,..: 31 31 34 34 34 34 31 25 31 25 ...
@@ -661,12 +660,12 @@ dim(dat)</code></pre>
 <pre><code>## # A tibble: 6 × 64
 ##   `Form Date` `Form Ineffective Date`                         Program
 ##        &lt;fctr&gt;                   &lt;lgl&gt;                          &lt;fctr&gt;
-## 1     9/12/14                      NA             Treatment - IDD Men
-## 2     9/26/14                      NA             Treatment - IDD Men
-## 3     9/29/14                      NA           Treatment - IDD Women
-## 4     10/1/14                      NA           Treatment - IDD Women
-## 5     10/1/14                      NA           Treatment - IDD Women
-## 6    10/22/14                      NA Treatment - Family - Outpatient
+## 1   9/12/2014                      NA             Treatment - IDD Men
+## 2   9/26/2014                      NA             Treatment - IDD Men
+## 3   9/29/2014                      NA           Treatment - IDD Women
+## 4   10/1/2014                      NA           Treatment - IDD Women
+## 5   10/1/2014                      NA           Treatment - IDD Women
+## 6  10/22/2014                      NA Treatment - Family - Outpatient
 ## # ... with 61 more variables: Staff &lt;fctr&gt;, `Client Number` &lt;fctr&gt;, `Any
 ## #   children living else where due to CPS court order or action` &lt;fctr&gt;,
 ## #   `CD Treatments used` &lt;fctr&gt;, `CHSR Dimension 1` &lt;fctr&gt;, `CHSR
@@ -712,6 +711,48 @@ dim(dat)</code></pre>
 ## #   respectful of culture` &lt;fctr&gt;, `Where client has been living in past
 ## #   30 days` &lt;fctr&gt;, `Will client be living in environment conducive to
 ## #   recovery` &lt;fctr&gt;</code></pre>
+<pre class="r"><code># Replace all the spaces in the column names, makes it easy to work with them in r
+colnames(dat) &lt;- suppressWarnings(make.names(colnames(dat), unique=TRUE))
+
+# Convert the Form date field to date format
+dat$Form.Date &lt;- as.Date(dat$Form.Date,format = &quot;%m/%d/%y&quot;)</code></pre>
+<pre class="r"><code># check the class of the data attributes - almost all of them are factors, 
+# we need to convert them to right format before we start our EDA
+
+######## check the class of the data attributes - almost all of them are factors, 
+######## we need to convert them to right format before we start our EDA
+#table(sapply(dat,class))
+# colnames(dat) # check the colnames
+cols.num &lt;- c(&quot;Days.used.in.past.30..Primary.&quot;,
+              &quot;Days.used.in.past.30..Tertiary.&quot;,                                    
+              &quot;Days.used.in.past.30.days..Secondary.&quot;, 
+              &quot;Hours.of.treatment&quot;,
+              &quot;Number.of..sessions.living.skills.development.in.past.30.days&quot;,        
+              &quot;Number.of.alcohol.drug.testing.sessions.in.past.30.days&quot;,       
+              &quot;Number.of.arrests.in.past.30.days&quot;,                                   
+              &quot;Number.of.Childcare.sessions.in.past.30.days&quot;,                         
+              # &quot;Number.of.children&quot;,                                                   
+              # &quot;Number.of.children.client.lost.parental.rights.to&quot;,                   
+              # &quot;Number.of.children.living.elsewhere&quot;,                                  
+              &quot;Number.of.Co.Occurring.mental.illness.sessions.in.past.30.days&quot;,       
+              &quot;Number.of.Coordination.of.services.sessions.in.past.30.days&quot;,          
+              &quot;Number.of.days.client.used.alcohol.in.past.30.days&quot;,                   
+              &quot;Number.of.days.client.used.illicit.drugs.in.past.30.days&quot;,             
+              &quot;Number.of.detox.sessions.in.past.30.days&quot;,                             
+              &quot;Number.of.Employment.Education.sessions.in.past.30.days&quot;,              
+              &quot;Number.of.Group.Counseling.sessions.in.past.30.days&quot;,                  
+              &quot;Number.of.Individual.Counseling.sessions.in.past.30.days&quot;,             
+              # &quot;Number.of.interactions.with.supportive.family.friends.in.past.30.days&quot;,
+              &quot;Number.of.Medical.Care.sessions.in.past.30.days&quot;,                      
+              &quot;Number.of.Relationship.Family.Counseling.sessions.in.past.30.days&quot;,    
+              # &quot;Number.of.self.help.programs.attended.in.past.30.days&quot;,                
+              &quot;Number.of.Spiritual.support.sessions.in.past.30.days&quot;,                 
+              &quot;Number.of.Substance.Abuse.Education.sessions.in.past.30.days&quot;,         
+              &quot;Number.of.Therapeutic.recreation.sessions.in.past.30.days&quot;,            
+              &quot;Number.of.Transportation.services.in.past.30.days&quot;,
+              &quot;Total.Charges..dollars.only.&quot;
+              )
+dat[cols.num] &lt;- sapply(sapply(dat[cols.num],as.character),as.numeric)</code></pre>
 <pre><code>## Warning in lapply(X = X, FUN = FUN, ...): NAs introduced by coercion
 
 ## Warning in lapply(X = X, FUN = FUN, ...): NAs introduced by coercion
@@ -741,6 +782,8 @@ dim(dat)</code></pre>
 ## Warning in lapply(X = X, FUN = FUN, ...): NAs introduced by coercion
 
 ## Warning in lapply(X = X, FUN = FUN, ...): NAs introduced by coercion</code></pre>
+<pre class="r"><code>###### Lets drop the column Form Ineffective date because it is all NAs
+dat &lt;- dat[,-2]</code></pre>
 <div id="lets-start-by-looking-at-the-different-programs-offered-by-avivo-and-their-split" class="section level4">
 <h4>Lets start by looking at the different programs offered by Avivo and their split</h4>
 <pre class="r"><code>#### Lets start by looking at the different programs offered by Avivo and their split

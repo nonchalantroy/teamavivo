@@ -35,8 +35,7 @@ setwd("~/teamavivo")
 # lets get the admission data in first 
 
 dat <- as_data_frame(fread("Daanes admissions 1.1.14-12.31.17.csv",header = TRUE,
-                           na.strings=c("NA","NaN","","N/A","unknown","unknwn","None","-","Na"," ","99"),sep =",",
-                           skip = 0,stringsAsFactors = TRUE,check.names = T))
+                          na.strings=c("NA","NaN","","N/A","unknown","unknwn","None","-","Na","","99"),sep =",",skip = 0,stringsAsFactors = TRUE,check.names = T))
 
 
 
@@ -47,12 +46,15 @@ str(dat)
 head(dat)
 
 ```
-```{r replace spaces ,message = FALSE,warning = FALSE,results ='hide',include=FALSE}
+```{r replace spaces ,message = FALSE,warning = FALSE,results ='hide'}
 
 # Replace all the spaces in the column names, makes it easy to work with them in r
 colnames(dat) <- suppressWarnings(make.names(colnames(dat), unique=TRUE))
+
+# Convert the Form date field to date format
+dat$Form.Date <- as.Date(dat$Form.Date,format = "%m/%d/%y")
 ```
-```{r change data types to the right format,echo=FALSE,message=FALSE}
+```{r change data types to the right format,message=FALSE}
 # check the class of the data attributes - almost all of them are factors, 
 # we need to convert them to right format before we start our EDA
 
