@@ -1,0 +1,74 @@
+---
+title: "Exploratory Data Analysis - Demographic Data"
+author: "Abhishek Roy"
+output:
+  html_document:
+    fig_caption: true
+    keep_md:  true
+    theme:  flatly
+---
+
+## Introduction  
+
+Exploratory Data Analysis(EDA) of the Avivo demographic data.
+
+
+<br>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Load packages and data
+```{r load_packages, message=FALSE, results='hide',warning = FALSE}
+rm(list=ls())
+library(dplyr)
+library(tidyr)
+library(data.table)
+library(lubridate)
+library(ggplot2)
+library(ggthemes)
+setwd("~/teamavivo")
+```
+
+```{r load_data,message = FALSE,warning = FALSE}
+
+dat <- readRDS("dat.rds")
+
+dat <- dat %>% 
+       filter(Form.Flag == "admission")
+
+```
+
+```{r review data structure,message = FALSE,warning = FALSE}
+
+# We first check the size and structure of data
+dim(dat)
+summary(dat)
+str(dat)
+head(dat)
+
+
+```
+
+```{r lets look at age distribution,message = FALSE,warning = FALSE}
+
+# We first check the size and structure of data
+hist(dat$Age)
+
+summary(dat$Age)
+
+# Lets try to bin the age -
+ 
+ageBinVar <- function(age){
+  ifelse((age >= 65),"65+",
+         ifelse((age>=55), "55-64",
+                ifelse((age>=45),"45-54",
+                       ifelse((age>=35),"35-44",
+                              ifelse((age>=25),"25-35","18-24")))))
+}
+
+dat$binned.age <- ageBinVar(dat$Age)
+
+```
+       

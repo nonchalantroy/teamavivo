@@ -35,8 +35,7 @@ setwd("~/teamavivo")
 # lets get the admission data in first 
 
 dat <- as_data_frame(fread("Daanes admissions 1.1.14-12.31.17.csv",header = TRUE,
-                           na.strings=c("NA","NaN","","N/A","unknown","unknwn","None","-","Na"," ","99"),sep =",",
-                           skip = 0,stringsAsFactors = TRUE,check.names = T))
+                          na.strings=c("NA","NaN","","N/A","unknown","unknwn","None","-","Na","","99"),sep =",",skip = 0,stringsAsFactors = TRUE,check.names = T))
 
 
 
@@ -53,14 +52,14 @@ summary(dat)
 ```
 
 ```
-##     Form Date    Form Ineffective Date
-##  10/28/16:  10   Mode:logical         
-##  12/15/17:  10   NA's:1789            
-##  9/16/16 :  10                        
-##  10/13/17:   9                        
-##  11/6/15 :   9                        
-##  12/18/15:   9                        
-##  (Other) :1732                        
+##       Form Date    Form Ineffective Date
+##  10/28/2016:  10   Mode:logical         
+##  12/15/2017:  10   NA's:1789            
+##  9/16/2016 :  10                        
+##  10/13/2017:   9                        
+##  11/6/2015 :   9                        
+##  12/18/2015:   9                        
+##  (Other)   :1732                        
 ##                             Program                     Staff    
 ##  Treatment - IDD Men            :565   Jackson, Jacinta    :231  
 ##  Treatment - IDD Women          :502   Roche, Maria        :194  
@@ -501,7 +500,7 @@ str(dat)
 
 ```
 ## Classes 'tbl_df', 'tbl' and 'data.frame':	1789 obs. of  64 variables:
-##  $ Form Date                                                            : Factor w/ 666 levels "1/1/15","1/10/16",..: 615 646 651 46 46 74 87 94 138 158 ...
+##  $ Form Date                                                            : Factor w/ 666 levels "1/1/2015","1/10/2016",..: 615 646 651 46 46 74 87 94 138 158 ...
 ##  $ Form Ineffective Date                                                : logi  NA NA NA NA NA NA ...
 ##  $ Program                                                              : Factor w/ 19 levels "ARMHS - Princeton/St. Cloud",..: 14 14 15 15 15 13 15 15 14 15 ...
 ##  $ Staff                                                                : Factor w/ 43 levels "Ackerman, Christopher",..: 31 31 34 34 34 34 31 25 31 25 ...
@@ -576,12 +575,12 @@ head(dat)
 ## # A tibble: 6 × 64
 ##   `Form Date` `Form Ineffective Date`                         Program
 ##        <fctr>                   <lgl>                          <fctr>
-## 1     9/12/14                      NA             Treatment - IDD Men
-## 2     9/26/14                      NA             Treatment - IDD Men
-## 3     9/29/14                      NA           Treatment - IDD Women
-## 4     10/1/14                      NA           Treatment - IDD Women
-## 5     10/1/14                      NA           Treatment - IDD Women
-## 6    10/22/14                      NA Treatment - Family - Outpatient
+## 1   9/12/2014                      NA             Treatment - IDD Men
+## 2   9/26/2014                      NA             Treatment - IDD Men
+## 3   9/29/2014                      NA           Treatment - IDD Women
+## 4   10/1/2014                      NA           Treatment - IDD Women
+## 5   10/1/2014                      NA           Treatment - IDD Women
+## 6  10/22/2014                      NA Treatment - Family - Outpatient
 ## # ... with 61 more variables: Staff <fctr>, `Client Number` <fctr>, `Any
 ## #   children living else where due to CPS court order or action` <fctr>,
 ## #   `CD Treatments used` <fctr>, `CHSR Dimension 1` <fctr>, `CHSR
@@ -629,6 +628,53 @@ head(dat)
 ## #   recovery` <fctr>
 ```
 
+```r
+# Replace all the spaces in the column names, makes it easy to work with them in r
+colnames(dat) <- suppressWarnings(make.names(colnames(dat), unique=TRUE))
+
+# Convert the Form date field to date format
+dat$Form.Date <- as.Date(dat$Form.Date,format = "%m/%d/%y")
+```
+
+```r
+# check the class of the data attributes - almost all of them are factors, 
+# we need to convert them to right format before we start our EDA
+
+######## check the class of the data attributes - almost all of them are factors, 
+######## we need to convert them to right format before we start our EDA
+#table(sapply(dat,class))
+# colnames(dat) # check the colnames
+cols.num <- c("Days.used.in.past.30..Primary.",
+              "Days.used.in.past.30..Tertiary.",                                    
+              "Days.used.in.past.30.days..Secondary.", 
+              "Hours.of.treatment",
+              "Number.of..sessions.living.skills.development.in.past.30.days",        
+              "Number.of.alcohol.drug.testing.sessions.in.past.30.days",       
+              "Number.of.arrests.in.past.30.days",                                   
+              "Number.of.Childcare.sessions.in.past.30.days",                         
+              # "Number.of.children",                                                   
+              # "Number.of.children.client.lost.parental.rights.to",                   
+              # "Number.of.children.living.elsewhere",                                  
+              "Number.of.Co.Occurring.mental.illness.sessions.in.past.30.days",       
+              "Number.of.Coordination.of.services.sessions.in.past.30.days",          
+              "Number.of.days.client.used.alcohol.in.past.30.days",                   
+              "Number.of.days.client.used.illicit.drugs.in.past.30.days",             
+              "Number.of.detox.sessions.in.past.30.days",                             
+              "Number.of.Employment.Education.sessions.in.past.30.days",              
+              "Number.of.Group.Counseling.sessions.in.past.30.days",                  
+              "Number.of.Individual.Counseling.sessions.in.past.30.days",             
+              # "Number.of.interactions.with.supportive.family.friends.in.past.30.days",
+              "Number.of.Medical.Care.sessions.in.past.30.days",                      
+              "Number.of.Relationship.Family.Counseling.sessions.in.past.30.days",    
+              # "Number.of.self.help.programs.attended.in.past.30.days",                
+              "Number.of.Spiritual.support.sessions.in.past.30.days",                 
+              "Number.of.Substance.Abuse.Education.sessions.in.past.30.days",         
+              "Number.of.Therapeutic.recreation.sessions.in.past.30.days",            
+              "Number.of.Transportation.services.in.past.30.days",
+              "Total.Charges..dollars.only."
+              )
+dat[cols.num] <- sapply(sapply(dat[cols.num],as.character),as.numeric)
+```
 
 ```
 ## Warning in lapply(X = X, FUN = FUN, ...): NAs introduced by coercion
@@ -660,6 +706,11 @@ head(dat)
 ## Warning in lapply(X = X, FUN = FUN, ...): NAs introduced by coercion
 
 ## Warning in lapply(X = X, FUN = FUN, ...): NAs introduced by coercion
+```
+
+```r
+###### Lets drop the column Form Ineffective date because it is all NAs
+dat <- dat[,-2]
 ```
 
 #### Lets start by looking at the different programs offered by Avivo and their split
